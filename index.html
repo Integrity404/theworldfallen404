@@ -1,10 +1,200 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>The World Fallen 404</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The World Fallen 404</title>
+
+<style>
+html, body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family:Consolas, monospace;
+    background:black;
+}
+
+/* Start screen */
+#startScreen{
+    position:fixed;
+    inset:0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    background:#000;
+    color:white;
+    z-index:100;
+}
+
+#startBtn{
+    padding:18px 35px;
+    font-size:22px;
+    border:none;
+    background:#111;
+    color:#0f0;
+    cursor:pointer;
+    border:2px solid #0f0;
+}
+
+#startBtn:hover{
+    background:#0f0;
+    color:black;
+}
+
+/* Fake windows */
+.fakeWindow{
+    position:absolute;
+    width:240px;
+    height:140px;
+    background:#ddd;
+    border:2px solid #888;
+    box-shadow:0 0 15px rgba(0,0,0,.5);
+    transition:all 1s ease;
+}
+
+.bar{
+    height:28px;
+    background:#333;
+}
+
+#win1{top:10%; left:8%;}
+#win2{top:22%; left:45%;}
+#win3{top:55%; left:20%;}
+
+/* Fake desktop */
+#desktop{
+    position:fixed;
+    inset:0;
+    background:url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80') center/cover;
+    opacity:0;
+    transition:opacity 1.5s;
+}
+
+/* Terminal */
+#terminal{
+    position:absolute;
+    width:650px;
+    max-width:90%;
+    height:320px;
+    background:black;
+    border:3px solid #0f0;
+    color:#0f0;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    padding:15px;
+    font-size:24px;
+    box-shadow:0 0 35px #0f0;
+    display:none;
+}
+
+#closeHint{
+    position:fixed;
+    bottom:15px;
+    right:20px;
+    color:white;
+    font-size:14px;
+    z-index:999;
+}
+</style>
 </head>
+
 <body>
-  <h1>The World Fallen 404</h1>
-  <p>Your site is live.</p>
+
+<div id="startScreen">
+    <h1>The World Fallen 404</h1>
+    <p>Click to Begin</p>
+    <button id="startBtn">ENTER</button>
+</div>
+
+<div id="desktop">
+    <div class="fakeWindow" id="win1"><div class="bar"></div></div>
+    <div class="fakeWindow" id="win2"><div class="bar"></div></div>
+    <div class="fakeWindow" id="win3"><div class="bar"></div></div>
+
+    <div id="terminal">
+        <div id="text"></div>
+    </div>
+</div>
+
+<div id="closeHint">Press ESC to exit fullscreen</div>
+
+<script>
+const btn = document.getElementById("startBtn");
+const start = document.getElementById("startScreen");
+const desktop = document.getElementById("desktop");
+const wins = document.querySelectorAll(".fakeWindow");
+const terminal = document.getElementById("terminal");
+const text = document.getElementById("text");
+
+btn.onclick = async () => {
+
+    if(document.documentElement.requestFullscreen){
+        document.documentElement.requestFullscreen();
+    }
+
+    start.style.display = "none";
+    desktop.style.opacity = "1";
+
+    // fake minimize animation
+    setTimeout(()=>{
+        wins.forEach(win=>{
+            win.style.transform = "scale(0)";
+            win.style.opacity = "0";
+        });
+    },800);
+
+    // terminal open
+    setTimeout(()=>{
+        terminal.style.display = "block";
+        typeText();
+    },2200);
+};
+
+function typeText(){
+    let lines = [
+        "Locating user...",
+        "Accessing fear module...",
+        "",
+        "HERE I COME"
+    ];
+
+    let i = 0;
+
+    function nextLine(){
+        if(i < lines.length){
+            let div = document.createElement("div");
+            text.appendChild(div);
+
+            let line = lines[i];
+            let c = 0;
+
+            let typer = setInterval(()=>{
+                div.textContent += line[c];
+                c++;
+                if(c >= line.length){
+                    clearInterval(typer);
+                    i++;
+                    setTimeout(nextLine,500);
+                }
+            },50);
+        }
+    }
+
+    nextLine();
+}
+
+document.addEventListener("keydown",(e)=>{
+    if(e.key==="Escape"){
+        if(document.fullscreenElement){
+            document.exitFullscreen();
+        }
+    }
+});
+</script>
+
 </body>
 </html>
