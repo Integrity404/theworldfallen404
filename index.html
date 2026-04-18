@@ -2,198 +2,188 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The World Fallen 404</title>
-
 <style>
-html, body{
+html,body{
     margin:0;
     padding:0;
     width:100%;
     height:100%;
     overflow:hidden;
-    font-family:Consolas, monospace;
     background:black;
+    font-family:Consolas, monospace;
 }
 
-/* Start screen */
-#startScreen{
-    position:fixed;
-    inset:0;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
-    background:#000;
-    color:white;
-    z-index:100;
-}
-
-#startBtn{
-    padding:18px 35px;
-    font-size:22px;
-    border:none;
-    background:#111;
-    color:#0f0;
-    cursor:pointer;
-    border:2px solid #0f0;
-}
-
-#startBtn:hover{
-    background:#0f0;
-    color:black;
-}
-
-/* Fake windows */
-.fakeWindow{
-    position:absolute;
-    width:240px;
-    height:140px;
-    background:#ddd;
-    border:2px solid #888;
-    box-shadow:0 0 15px rgba(0,0,0,.5);
-    transition:all 1s ease;
-}
-
-.bar{
-    height:28px;
-    background:#333;
-}
-
-#win1{top:10%; left:8%;}
-#win2{top:22%; left:45%;}
-#win3{top:55%; left:20%;}
-
-/* Fake desktop */
+/* fake desktop wallpaper */
 #desktop{
     position:fixed;
     inset:0;
     background:url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80') center/cover;
     opacity:0;
-    transition:opacity 1.5s;
 }
 
-/* Terminal */
-#terminal{
+/* CMD window */
+#cmd{
     position:absolute;
-    width:650px;
-    max-width:90%;
-    height:320px;
+    width:800px;
+    height:450px;
     background:black;
-    border:3px solid #0f0;
     color:#0f0;
     top:50%;
     left:50%;
     transform:translate(-50%,-50%);
-    padding:15px;
-    font-size:24px;
-    box-shadow:0 0 35px #0f0;
+    padding:10px;
+    display:none;
+    box-shadow:0 0 40px #0f0;
+}
+
+#text{
+    white-space:pre-wrap;
+    font-size:16px;
+}
+
+/* glitch overlay */
+#glitch{
+    position:fixed;
+    inset:0;
+    background:black;
     display:none;
 }
 
-#closeHint{
+/* final horror screen */
+#final{
     position:fixed;
-    bottom:15px;
-    right:20px;
-    color:white;
-    font-size:14px;
-    z-index:999;
+    inset:0;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    font-size:40px;
+    font-weight:bold;
+    text-align:center;
+    color:red;
+    background:black;
+    animation:flash 0.3s infinite;
+}
+
+@keyframes flash{
+    0%{filter:invert(0);}
+    50%{filter:invert(1);}
+    100%{filter:invert(0);}
 }
 </style>
 </head>
 
 <body>
 
-<div id="startScreen">
-    <h1>The World Fallen 404</h1>
-    <p>Click to Begin</p>
-    <button id="startBtn">ENTER</button>
+<div id="desktop"></div>
+
+<div id="cmd">
+<div id="text"></div>
 </div>
 
-<div id="desktop">
-    <div class="fakeWindow" id="win1"><div class="bar"></div></div>
-    <div class="fakeWindow" id="win2"><div class="bar"></div></div>
-    <div class="fakeWindow" id="win3"><div class="bar"></div></div>
+<div id="glitch"></div>
 
-    <div id="terminal">
-        <div id="text"></div>
-    </div>
+<div id="final">
+THE GATES TO THIS WORLD IS NO MORE.<br>PERISH
 </div>
 
-<div id="closeHint">Press ESC to exit fullscreen</div>
+<!-- AUDIO PLACEHOLDERS -->
+<audio id="audio1" src="acsendingjumpscare.mp3"></audio>
+<audio id="audio2" src="beforesoundline.mp3"></audio>
+<audio id="audio3" src="HELL.mp3"></audio>
 
 <script>
-const btn = document.getElementById("startBtn");
-const start = document.getElementById("startScreen");
+
 const desktop = document.getElementById("desktop");
-const wins = document.querySelectorAll(".fakeWindow");
-const terminal = document.getElementById("terminal");
+const cmd = document.getElementById("cmd");
 const text = document.getElementById("text");
+const glitch = document.getElementById("glitch");
+const final = document.getElementById("final");
 
-btn.onclick = async () => {
+function start(){
 
+    // try fullscreen (requires gesture, so tied to first interaction)
     if(document.documentElement.requestFullscreen){
         document.documentElement.requestFullscreen();
     }
 
-    start.style.display = "none";
-    desktop.style.opacity = "1";
+    desktop.style.opacity = 1;
 
-    // fake minimize animation
-    setTimeout(()=>{
-        wins.forEach(win=>{
-            win.style.transform = "scale(0)";
-            win.style.opacity = "0";
-        });
-    },800);
+    setTimeout(openCMD, 10000);
+}
 
-    // terminal open
-    setTimeout(()=>{
-        terminal.style.display = "block";
-        typeText();
-    },2200);
-};
+function openCMD(){
+    cmd.style.display = "block";
 
-function typeText(){
-    let lines = [
-        "Locating user...",
-        "Accessing fear module...",
-        "",
-        "HERE I COME"
-    ];
+    const lines = [
+`Microsoft Windows [Version 10.0.22621.1265]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\\Users\\YOU>`,
+"locate user",
+"User was found.",
+"",
+"C:\\Users\\YOU>locate me",
+"Deep below the universe.",
+"",
+"C:\\Users\\YOU>open void",
+"Void opened, access to the universe valid.",
+"",
+"C:\\Users\\YOU>IM_HERE.EXE"
+];
 
     let i = 0;
 
-    function nextLine(){
+    function type(){
         if(i < lines.length){
-            let div = document.createElement("div");
-            text.appendChild(div);
-
-            let line = lines[i];
-            let c = 0;
-
-            let typer = setInterval(()=>{
-                div.textContent += line[c];
-                c++;
-                if(c >= line.length){
-                    clearInterval(typer);
-                    i++;
-                    setTimeout(nextLine,500);
-                }
-            },50);
+            text.innerHTML += lines[i] + "\n";
+            i++;
+            setTimeout(type, 700);
+        } else {
+            startGlitch();
         }
     }
 
-    nextLine();
+    type();
 }
 
-document.addEventListener("keydown",(e)=>{
-    if(e.key==="Escape"){
-        if(document.fullscreenElement){
-            document.exitFullscreen();
-        }
-    }
-});
+function startGlitch(){
+
+    // optional audio start
+    // document.getElementById("audio1").play();
+
+    let duration = 4050;
+    glitch.style.display = "block";
+
+    let interval = setInterval(()=>{
+        document.body.style.transform = 
+        `translate(${Math.random()*10-5}px,${Math.random()*10-5}px)`;
+    },50);
+
+    setTimeout(()=>{
+        clearInterval(interval);
+        glitch.style.display = "none";
+        document.body.style.transform = "none";
+        blackScreen();
+    }, duration);
+}
+
+function blackScreen(){
+    desktop.style.display = "none";
+    cmd.style.display = "none";
+
+    setTimeout(()=>{
+        // document.getElementById("audio2").play();
+        final.style.display = "flex";
+
+        setTimeout(()=>{
+            // document.getElementById("audio3").play();
+        }, 5000);
+
+    }, 5000);
+}
+
+document.addEventListener("click", start, {once:true});
 </script>
 
 </body>
