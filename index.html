@@ -1,22 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Recursive Hack</title>
-<link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>&nbsp;</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<a href="#" id="startLink">Start</a>
 
-<div id="screen" class="hidden"></div>
-<div id="terminal" class="hidden">
-  <pre id="terminalText"></pre>
-</div>
-<audio id="scareAudio1" src="ascendingjumpscare.mp3"></audio>
-<audio id="scareAudio2" src="beforesoundline.mp3"></audio>
-<audio id="scareAudio3" src="HELL.mp3"></audio>
+  <div id="intro"></div>
 
-<script src="script.js"></script>
+  <div id="wallpaper">
+    <div class="aurora layer-1"></div>
+    <div class="aurora layer-2"></div>
+    <div class="aurora layer-3"></div>
+    <div class="aurora layer-4"></div>
+    <div id="stars-container"></div>
+    <svg id="mountains" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path d="M0,320 L0,210 L60,190 L120,205 L180,175 L260,195 L330,155 L400,175 L480,135 L550,160 L620,118 L700,145 L770,105 L850,130 L920,95 L1000,120 L1070,88 L1150,112 L1210,92 L1290,115 L1360,100 L1440,118 L1440,320 Z"
+            fill="#07122e" opacity="0.95"/>
+      <path d="M0,320 L0,260 L80,248 L160,256 L240,240 L320,252 L400,234 L480,248 L560,228 L640,242 L720,224 L800,238 L880,220 L960,234 L1040,218 L1120,232 L1200,216 L1280,228 L1360,238 L1440,225 L1440,320 Z"
+            fill="#030b1a" opacity="1"/>
+    </svg>
+  </div>
+
+  <div id="cmd-window">
+    <div id="cmd-titlebar">
+      <svg id="cmd-icon" width="16" height="16" viewBox="0 0 16 16">
+        <rect width="16" height="16" fill="#1a1a1a"/>
+        <rect x="1" y="1" width="14" height="1" fill="#555"/>
+        <text x="1" y="12" fill="#b0b0b0" font-size="7.5" font-family="Consolas,monospace" font-weight="bold">C:\</text>
+      </svg>
+      <span id="cmd-title">Administrator: Command Prompt</span>
+      <div id="cmd-btns">
+        <span class="cbtn min" title="Minimize">&#8212;</span>
+        <span class="cbtn max" title="Maximize">&#9633;</span>
+        <span class="cbtn cls" title="Close">&#10005;</span>
+      </div>
+    </div>
+    <div id="cmd-body">
+      <pre id="cmd-out"></pre>
+    </div>
+    <div id="cmd-statusbar">
+      <span>Ln 1, Col 1</span>
+      <span>Administrator</span>
+    </div>
+  </div>
+
+  <canvas id="glitch"></canvas>
+  <div id="blackout"></div>
+
+  <div id="hell">
+    <p id="hell-text">WE FOUND YOU.</p>
+    <p id="hell-ip"></p>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
