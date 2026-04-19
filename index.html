@@ -1,28 +1,288 @@
 <!DOCTYPE html>
 <html lang="en">
-<head
-    <meta charset="UTF-8">
-    <title>The World Fallen 404</title>
-    <style>
-/* Basic styles for initial display */
-        body {            margin: 0;
-            background-color: black; /* Initial background */
-        }
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hacker Simulation</title>
+<style>
+  body {
+    margin: 0;
+    background-color: black;
+    overflow: hidden;
+    font-family: monospace;
+  }
 
-        .container {
-display: flex;
-            justify-content: center;
-            align-items:;
-            height: 100vh;
-            overflow: hidden; 
-        }
+  #startScreen {
+    width: 100vw;
+    height: 100vh;
+    background-color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    font-size: 2em;
+  }
 
-    </style>
-</head
+  #peacefulWall {
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.1&auto=format&fit=crop&w=1920&q=80'); /* Example wallpaper */
+    background-size: cover;
+  }
+
+  #console {
+    display: none;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 50%;
+    background-color: black;
+    color: #00ff00;
+    padding: 10px;
+    font-family: monospace;
+    overflow-y: auto;
+  }
+
+  #typedText {
+    white-space: pre;
+  }
+
+  #flashText {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3em;
+    font-weight: bold;
+    display: none;
+  }
+
+  /* Glitch effect placeholder */
+  @keyframes glitch {
+    0% { clip: rect(0, 100%, 0, 0); }
+    10% { clip: rect(0, 100%, 100%, 0); }
+    20% { clip: rect(0, 100%, 100%, 0); }
+    30% { clip: rect(0, 100%, 0, 0); }
+    100% { clip: rect(0, 100%, 100%, 0); }
+  }
+
+  #glitchOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+</style>
+</head>
 <body>
-    <div class="container">
-        <div id="linkContainer"></div>
-    </div>
 
-     src="main.js"></script> </>
+<div id="startScreen">Click to start</div>
+<div id="peacefulWall"></div>
+
+<div id="console">
+  <div id="typedText"></div>
+</div>
+
+<div id="flashText"></div>
+
+<canvas id="glitchOverlay"></canvas>
+
+<!-- Audio files placeholders -->
+<audio id="scareAudio" src="ascsendingjumpscare.mp3"></audio>
+<audio id="beforeSound" src="beforesoundline.mp3"></audio>
+<audio id="hellSound" src="HELL.mp3"></audio>
+
+<script>
+  const startScreen = document.getElementById('startScreen');
+  const peacefulWall = document.getElementById('peacefulWall');
+  const consoleDiv = document.getElementById('console');
+  const typedTextDiv = document.getElementById('typedText');
+  const flashText = document.getElementById('flashText');
+  const glitchCanvas = document.getElementById('glitchOverlay');
+  const ctx = glitchCanvas.getContext('2d');
+
+  const scareAudio = document.getElementById('scareAudio');
+  const beforeSound = document.getElementById('beforeSound');
+  const hellSound = document.getElementById('hellSound');
+
+  let userIP = 'Unknown';
+
+  // Resize canvas for glitch effect
+  function resizeCanvas() {
+    glitchCanvas.width = window.innerWidth;
+    glitchCanvas.height = window.innerHeight;
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+
+  startScreen.onclick = () => {
+    // Hide start screen
+    startScreen.style.display = 'none';
+
+    // Enter fullscreen
+    document.documentElement.requestFullscreen();
+
+    // Show peaceful wallpaper
+    peacefulWall.style.display = 'block';
+
+    // After 10 seconds, start command prompt simulation
+    setTimeout(startConsoleSequence, 10000);
+  };
+
+  async function startConsoleSequence() {
+    // Hide wallpaper
+    peacefulWall.style.display = 'none';
+
+    // Show console
+    consoleDiv.style.display = 'block';
+
+    // Retrieve user IP (using a free API)
+    fetch('https://api.ipify.org?format=json')
+      .then(res => res.json())
+      .then(data => { userIP = data.ip; });
+
+    // Simulate command prompt typing
+    const commands = [
+      "Microsoft Windows [Version 10.0.22621.1265]",
+      "(c) Microsoft Corporation. All rights reserved.",
+      "",
+      "C:\\Users\\YOU>locate user",
+      "User was found.",
+      "",
+      "C:\\Users\\YOU>locate me",
+      "Deep below the universe.",
+      "",
+      "C:\\Users\\YOU>open void",
+      "Void opened, access to the universe valid.",
+      "",
+      "C:\\Users\\YOU>execute",
+      "IM_HERE.EXE" // last line in special color
+    ];
+
+    let currentLine = 0;
+
+    function typeLine() {
+      if (currentLine >= commands.length) {
+        // After typing all lines, start effects
+        setTimeout(startGlitchAndSound, 2000);
+        return;
+      }
+      const line = commands[currentLine];
+      let currentChar = 0;
+      const span = document.createElement('div');
+
+      typedTextDiv.appendChild(span);
+
+      const interval = setInterval(() => {
+        if (currentChar >= line.length) {
+          clearInterval(interval);
+          typedTextDiv.appendChild(document.createElement('br'));
+          currentLine++;
+          setTimeout(typeLine, 300);
+        } else {
+          span.textContent += line[currentChar];
+          currentChar++;
+        }
+      }, 50);
+    }
+
+    // Special handling for last line to color IM_HERE.EXE blood red
+    function typeLastLine() {
+      const line = "IM_HERE.EXE";
+      const span = document.createElement('span');
+      span.style.color = 'bloodred';
+      typedTextDiv.appendChild(span);
+      let currentChar = 0;
+      const interval = setInterval(() => {
+        if (currentChar >= line.length) {
+          clearInterval(interval);
+          // After typing last line, start effects
+          setTimeout(startGlitchAndSound, 2000);
+        } else {
+          span.textContent += line[currentChar];
+          currentChar++;
+        }
+      }, 100);
+    }
+
+    // Override last line to be red
+    function startTyping() {
+      if (currentLine === commands.length -1) {
+        typeLastLine();
+      } else {
+        typeLine();
+      }
+    }
+
+    typeLine();
+
+  }
+
+  async function startGlitchAndSound() {
+    // Play scare sound
+    scareAudio.play();
+
+    // Start glitch effect
+    glitchInterval = setInterval(() => {
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      ctx.fillStyle = `rgb(${Math.random()*255}, ${Math.random()*255}, ${Math.random()*255})`;
+      ctx.fillRect(Math.random() * window.innerWidth, Math.random() * window.innerHeight, Math.random() * 50, Math.random() * 50);
+    }, 50);
+
+    // When audio ends, stop glitch, go black
+    scareAudio.onended = () => {
+      clearInterval(glitchInterval);
+      document.body.style.backgroundColor = 'black';
+
+      // After 5 seconds, play second audio
+      setTimeout(() => {
+        beforeSound.play();
+        beforeSound.onended = () => {
+          // Play last sound
+          hellSound.play();
+          hellSound.onended = () => {
+            showFinalMessage();
+          }
+        };
+      }, 5000);
+    };
+  }
+
+  function showFinalMessage() {
+    // Show flashing "WE FOUND YOU" and user IP
+    flashText.style.display = 'block';
+    flashText.textContent = 'WE FOUND YOU.';
+    flashText.style.color = 'white';
+
+    // Flash effect
+    let flash = true;
+    const flashInterval = setInterval(() => {
+      flashText.style.color = flash ? 'black' : 'white';
+      flash = !flash;
+    }, 100);
+
+    // Show IP below
+    const ipDiv = document.createElement('div');
+    ipDiv.style.color = 'white';
+    ipDiv.style.textAlign = 'center';
+    ipDiv.style.fontSize = '2em';
+    ipDiv.innerText = `Your IP: ${userIP}`;
+    document.body.appendChild(ipDiv);
+
+    // Stop flashing and close page after sound duration (~28 sec)
+    setTimeout(() => {
+      clearInterval(flashInterval);
+      // Close tab
+      window.close();
+    }, 28000);
+  }
+
+</script>
+
+</body>
 </html>
