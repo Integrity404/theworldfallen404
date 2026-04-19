@@ -35,17 +35,14 @@
      PHASE 0 — Intro click
   ───────────────────────── */
   document.getElementById('intro').addEventListener('click', () => {
-    // Request fullscreen
     const el = document.documentElement;
     const fs = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
     if (fs) fs.call(el).catch(() => {});
 
-    // Hide intro, show wallpaper
     document.getElementById('intro').style.display = 'none';
     buildStars();
     document.getElementById('wallpaper').classList.add('show');
 
-    // Phase 1: open CMD after 10 seconds
     setTimeout(openCmd, 10000);
   }, { once: true });
 
@@ -55,44 +52,27 @@
   function openCmd() {
     const win = document.getElementById('cmd-window');
     win.style.display = 'block';
-    // Double rAF forces a real repaint before transition fires
     requestAnimationFrame(() => requestAnimationFrame(() => win.classList.add('open')));
-    // Start typing 5 seconds after window opens
     setTimeout(startTyping, 5000);
   }
 
   /* ─────────────────────────
-     PHASE 2 — Typing Sequence
-     Total ≈ 60 seconds
+     PHASE 2 — Typing Sequence (~60s)
   ───────────────────────── */
-
-  // [text, instant, red, delayBeforeMs]
   const SEQ = [
-    // Header appears immediately at typing start
     ['Microsoft Windows [Version 10.0.22621.1265]\n(c) Microsoft Corporation. All rights reserved.\n\n', true, false, 0],
-
-    // 8s pause — then first prompt
     ['C:\\Users\\YOU>', true, false, 8000],
-    // 1.5s "thinking" — then type command
     ['locate user',   false, false, 1500],
-    // Enter → response
     ['\nUser was found.\n', true, false, 380],
-
-    // 10s pause — user "reads"
     ['C:\\Users\\YOU>', true, false, 10000],
     ['locate me',     false, false, 1500],
     ['\nDeep below the universe.\n', true, false, 380],
-
-    // 10s pause
     ['C:\\Users\\YOU>', true, false, 10000],
     ['open void',     false, false, 1500],
     ['\nVoid opened, access to the universe valid.\n', true, false, 380],
-
-    // 14s pause — long dread
     ['C:\\Users\\YOU>', true, false, 14000],
     ['execute',       false, false, 2200],
-    ['\nIM_HERE.EXE', true,  true,  380],
-    // Total ≈ 0+8+1.5+~3.5+0.38+10+1.5+~2.8+0.38+10+1.5+~2.8+0.38+14+2.2+~1.8+0.38 ≈ 60s
+    ['\nIM_HERE.EXE', true, true, 380],
   ];
 
   const cmdOut = document.getElementById('cmd-out');
@@ -121,7 +101,6 @@
       const ch = text[i++];
       if (node) node.textContent += ch;
       else cmdOut.appendChild(document.createTextNode(ch));
-      // Realistic random keystroke timing
       setTimeout(tick, 170 + Math.random() * 320);
     })();
   }
@@ -130,7 +109,6 @@
     let i = 0;
     (function next() {
       if (i >= SEQ.length) {
-        // Typing done — 2 second pause, then jumpscare
         setTimeout(jumpScare, 2000);
         return;
       }
@@ -143,150 +121,212 @@
   }
 
   /* ─────────────────────────
-     PHASE 3 — Jumpscare + Glitch (4.05s)
+     PHASE 3 — Jumpscare + Ramping Glitch
+     FIX 1: intensity ramps from 0 → max over audio duration
+     FIX 2: instant black on audio end
   ───────────────────────── */
   function jumpScare() {
-    // Play audio
-    const sfx = new Audio('acsendingjumpscare.mp3');
-    sfx.play().catch(() => {});
-
-    // Glitch canvas
     const canvas = document.getElementById('glitch');
     canvas.style.display = 'block';
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
     const ctx = canvas.getContext('2d');
 
-    const DURATION = 4050;
-    const glitchEnd = Date.now() + DURATION;
+    const DURATION  = 4050;
+    const startTime = Date.now();
+    const endTime   = startTime + DURATION;
 
+    // Each filter fn now accepts t (0→1) and scales accordingly
     const filterBank = [
-      () => `hue-rotate(${Math.random() * 360 | 0}deg) saturate(${5 + Math.random() * 12}) contrast(${1.5 + Math.random() * 3})`,
-      () => `invert(1) hue-rotate(${Math.random() * 360 | 0}deg) saturate(${6 + Math.random() * 8})`,
-      () => `saturate(0) contrast(${6 + Math.random() * 6}) brightness(${2 + Math.random() * 3})`,
-      () => `hue-rotate(${90 + Math.random() * 270 | 0}deg) invert(1) saturate(${7 + Math.random() * 10})`,
-      () => `contrast(${8 + Math.random() * 8}) brightness(${0.1 + Math.random() * 0.4})`,
+      t => `hue-rotate(${(Math.random() * 360 * t) | 0}deg) saturate(${1 + t * 14}) contrast(${1 + t * 4})`,
+      t => `invert(${t > 0.5 ? 1 : 0}) hue-rotate(${(Math.random() * 360 * t) | 0}deg) saturate(${1 + t * 9})`,
+      t => `saturate(${t * 3}) contrast(${1 + t * 8}) brightness(${1 + t * 2})`,
+      t => `hue-rotate(${(90 + Math.random() * 270 * t) | 0}deg) invert(${t > 0.7 ? 1 : 0}) saturate(${1 + t * 11})`,
+      t => `contrast(${1 + t * 9}) brightness(${Math.max(0.05, 1 - t * 0.8)})`,
     ];
 
+    let done = false;
+
     (function gframe() {
-      if (Date.now() >= glitchEnd) {
-        // Glitch ends — clean up, fade to black
+      if (done) return;
+
+      const now = Date.now();
+
+      if (now >= endTime) {
+        done = true;
         canvas.style.display = 'none';
         document.body.style.transform = '';
         document.body.style.filter    = '';
-        fadeBlack();
-        setTimeout(playBefore, 5000); // 5s of silence then next audio
+        // FIX 2: hard instant black, no CSS transition
+        instantBlack();
+        setTimeout(playBefore, 5000);
         return;
       }
 
+      // t: 0 at start → 1 at end
+      const t = Math.max(0, Math.min(1, (now - startTime) / DURATION));
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Random colored horizontal slices (pixel swap simulation)
-      const blockCount = 14 + Math.random() * 28 | 0;
+      // Block count: starts ~2, ends ~42
+      const blockCount = Math.floor(2 + t * 40);
       for (let b = 0; b < blockCount; b++) {
-        ctx.globalAlpha = 0.25 + Math.random() * 0.75;
+        ctx.globalAlpha = 0.05 + t * 0.95 * Math.random();
         ctx.fillStyle   = `hsl(${Math.random() * 360 | 0}, 100%, ${38 + Math.random() * 55 | 0}%)`;
         ctx.fillRect(
           Math.random() * canvas.width,
           Math.random() * canvas.height,
-          40 + Math.random() * 380,
-          2  + Math.random() * 45
+          (10 + Math.random() * 370) * (0.1 + t * 0.9),
+          (1  + Math.random() * 44)  * (0.1 + t * 0.9)
         );
       }
 
-      // Diagonal slice offset blocks
-      for (let k = 0; k < 5; k++) {
-        if (Math.random() < 0.5) {
+      // Slice blocks scale with t
+      const sliceCount = Math.floor(t * 9);
+      for (let k = 0; k < sliceCount; k++) {
+        if (Math.random() < 0.55) {
           const y = Math.random() * canvas.height;
-          const h = 8 + Math.random() * 60;
-          ctx.globalAlpha = 0.5 + Math.random() * 0.5;
+          const h = (8 + Math.random() * 55) * t;
+          ctx.globalAlpha = 0.4 + t * 0.6 * Math.random();
           ctx.fillStyle   = `hsl(${Math.random() * 360 | 0}, 100%, 50%)`;
           ctx.fillRect(Math.random() * canvas.width * 0.5, y, canvas.width * 0.5, h);
         }
       }
 
-      // Scanlines
-      ctx.globalAlpha = 0.55;
+      // Scanlines intensify with t
+      ctx.globalAlpha = 0.05 + t * 0.7;
       for (let y = 0; y < canvas.height; y += 3) {
-        if (Math.random() < 0.22) {
-          ctx.fillStyle = Math.random() < 0.5 ? '#ff000066' : '#00ff0066';
+        if (Math.random() < 0.04 + t * 0.28) {
+          ctx.fillStyle = Math.random() < 0.5 ? '#ff000099' : '#00ff0099';
           ctx.fillRect(0, y, canvas.width, 1);
         }
       }
       ctx.globalAlpha = 1;
 
-      // Full-body jitter + extreme color filter
-      const jx = (Math.random() - 0.5) * 44;
-      const jy = (Math.random() - 0.5) * 28;
-      const sk = (Math.random() - 0.5) * 6;
-      document.body.style.transform = `translate(${jx}px, ${jy}px) skewX(${sk}deg)`;
-      document.body.style.filter    = filterBank[Math.random() * filterBank.length | 0]();
+      // Body jitter: barely moves at t=0, max chaos at t=1
+      if (t > 0.04) {
+        const jx = (Math.random() - 0.5) * t * 58;
+        const jy = (Math.random() - 0.5) * t * 36;
+        const sk = (Math.random() - 0.5) * t * 9;
+        document.body.style.transform = `translate(${jx}px, ${jy}px) skewX(${sk}deg)`;
+      }
+      if (t > 0.12) {
+        document.body.style.filter = filterBank[Math.random() * filterBank.length | 0](t);
+      }
 
       requestAnimationFrame(gframe);
     })();
+
+    // Start audio after loop is set up
+    const sfx = new Audio('acsendingjumpscare.mp3');
+    sfx.play().catch(() => {});
+
+    // Belt-and-suspenders: if 'ended' fires before timeout, trust the event
+    sfx.addEventListener('ended', () => {
+      if (!done) {
+        done = true;
+        canvas.style.display = 'none';
+        document.body.style.transform = '';
+        document.body.style.filter    = '';
+        instantBlack();
+        setTimeout(playBefore, 5000);
+      }
+    });
   }
 
   /* ─────────────────────────
-     PHASE 4 — Black Screen
+     PHASE 4 — Instant Black (FIX 2)
   ───────────────────────── */
-  function fadeBlack() {
-    document.getElementById('blackout').classList.add('on');
+  function instantBlack() {
+    const b = document.getElementById('blackout');
+    b.style.transition    = 'none';
+    b.style.opacity       = '1';
+    b.style.pointerEvents = 'all';
   }
 
   /* ─────────────────────────
      PHASE 5 — beforesoundline.mp3
+     FIX 3: hell triggers on audio 'ended', never depends on fullscreen state
   ───────────────────────── */
   function playBefore() {
     const audio = new Audio('beforesoundline.mp3');
-    audio.play().catch(() => {});
-    audio.addEventListener('ended', startHell);
-    // No hard timeout — we wait for the audio to end naturally
+    let hellFired = false;
+
+    function triggerHell() {
+      if (hellFired) return;
+      hellFired = true;
+      // Double rAF ensures DOM is ready to paint in fullscreen
+      requestAnimationFrame(() => requestAnimationFrame(startHell));
+    }
+
+    audio.addEventListener('ended', triggerHell);
+
+    // Hard fallback at 11m 30s in case 'ended' misfires
+    const fallback = setTimeout(triggerHell, 690000);
+    audio.addEventListener('ended', () => clearTimeout(fallback));
+
+    audio.play().catch(() => {
+      // Autoplay blocked — wait for any user interaction
+      document.addEventListener('click', () => audio.play().catch(() => {}), { once: true });
+    });
   }
 
   /* ─────────────────────────
      PHASE 6 — HELL
+     FIX 3: works entirely in fullscreen, no toggle needed
+     FIX 4: background flashes fast wild colors; text is fixed blood red
   ───────────────────────── */
   const BG_PALETTE = [
-    '#ff0000', '#cc0000', '#dd1000', '#ff1a00',
-    '#aa0000', '#ff3300', '#bb0000', '#ee0000',
-    '#ff0011', '#990000', '#ff2200',
+    '#ffffff', '#ffff00', '#00ffff', '#ff00ff',
+    '#00ff00', '#0000ff', '#ff8800', '#00ffaa',
+    '#ff0088', '#aaffff', '#ffaaff', '#ffffaa',
+    '#ff4400', '#4400ff', '#00ff44', '#ff0044',
+    '#44ffff', '#ffff44', '#000000', '#dddddd',
+    '#88ff00', '#ff88ff', '#00ffff', '#88aaff',
   ];
-  const FG_PALETTE = [
-    '#ffffff', '#ffff00', '#000000',
-    '#00ffff', '#ff00ff', '#ffe500',
-  ];
+
+  const TEXT_RED = '#c40000';
 
   function startHell() {
-    // Remove black overlay
-    document.getElementById('blackout').classList.remove('on');
+    // Remove blackout instantly
+    const b = document.getElementById('blackout');
+    b.style.transition    = 'none';
+    b.style.opacity       = '0';
+    b.style.pointerEvents = 'none';
 
-    const hell = document.getElementById('hell');
-    hell.classList.add('on');
-
+    const hell     = document.getElementById('hell');
     const hellText = document.getElementById('hell-text');
     const hellIp   = document.getElementById('hell-ip');
+
     hellIp.textContent = ip || 'UNKNOWN';
 
-    // Rapid flashing
+    // FIX 4: text locked to blood red, never changes
+    hellText.style.color       = TEXT_RED;
+    hellText.style.textShadow  = `0 0 40px ${TEXT_RED}, 0 0 80px #ff000088`;
+    hellIp.style.color         = TEXT_RED;
+    hellIp.style.textShadow    = `0 0 24px ${TEXT_RED}`;
+
+    hell.classList.add('on');
+
+    // FIX 4: background flashes, not text
+    let lastIdx = -1;
     function flash() {
-      const bg = BG_PALETTE[Math.random() * BG_PALETTE.length | 0];
-      const fg = FG_PALETTE[Math.random() * FG_PALETTE.length | 0];
-      hell.style.background    = bg;
-      hellText.style.color     = fg;
-      hellText.style.textShadow = `0 0 60px ${fg}, 0 0 120px ${fg}`;
-      hellIp.style.color       = fg;
+      let idx;
+      do { idx = Math.random() * BG_PALETTE.length | 0; } while (idx === lastIdx);
+      lastIdx = idx;
+      hell.style.background = BG_PALETTE[idx];
     }
 
-    const flashId = setInterval(flash, 55);
+    const flashId = setInterval(flash, 48);
     flash();
 
-    // Play HELL audio
     const audio = new Audio('HELL.mp3');
-    audio.play().catch(() => {});
+    audio.play().catch(() => {
+      document.addEventListener('click', () => audio.play().catch(() => {}), { once: true });
+    });
 
     function end() {
       clearInterval(flashId);
-      // Attempt to close tab; fallback to blank page
       try { window.close(); } catch (e) {}
       setTimeout(() => {
         try { window.location.replace('about:blank'); } catch (e) {}
@@ -294,7 +334,7 @@
     }
 
     audio.addEventListener('ended', end);
-    setTimeout(end, 30000); // hard safety fallback at 30s
+    setTimeout(end, 30000);
   }
 
 })();
