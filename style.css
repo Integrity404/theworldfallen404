@@ -296,11 +296,6 @@ html, body {
   z-index: 500;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.4s ease;
-}
-#blackout.on {
-  opacity: 1;
-  pointer-events: all;
 }
 
 /* ─────────────────────────────
@@ -323,14 +318,10 @@ html, body {
   font: 900 clamp(2.8rem, 9vw, 7.5rem)/1.05 'Arial Black', 'Impact', sans-serif;
   text-align: center;
   letter-spacing: 0.04em;
-  color: #fff;
-  text-shadow: 0 0 50px currentColor, 0 0 100px currentColor;
 }
 
 #hell-ip {
   font: 400 clamp(1.3rem, 3.5vw, 2.6rem)/1 Consolas, monospace;
   text-align: center;
-  color: #fff;
   letter-spacing: 0.14em;
-  text-shadow: 0 0 20px currentColor;
 }
